@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Age Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #00ff88;
+    --accent-dim: rgba(0,255,136,0.10);
+    --accent-dim2: rgba(0,255,136,0.04);
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --card: #13131d;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  input[type="date"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+  }
+
+  input[type="date"]:focus {
+    border-color: var(--accent);
+  }
+
+  button {
+    width: 100%;
+    margin-top: 16px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  button:hover { opacity: 0.9; }
+  button:active { transform: scale(0.98); }
+
+  .results {
+    display: none;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .results.show { display: block; }
+
+  .main-age {
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .main-age .label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .age-display {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .age-unit {
+    text-align: center;
+  }
+
+  .age-unit .num {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    font-family: 'Space Mono', monospace;
+    display: block;
+  }
+
+  .age-unit .unit-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .sep {
+    font-size: 3rem;
+    color: var(--border);
+    font-weight: 800;
+    align-self: center;
+    line-height: 1;
+    padding-bottom: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: rgba(0,255,136,0.3); }
+
+  .stat-card .s-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-card .s-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .full-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .full-card .f-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .full-card .f-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .birthday-card {
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .birthday-card .f-label {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .birthday-card .f-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0.8); opacity: 0; }
+    60%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .pop { animation: pop 0.4s ease both; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <header>
+    <span class="logo">// Age Calculator</span>
+    <h1>How Old Are You?</h1>
+    <p class="subtitle">Enter your birthdate — get the full breakdown</p>
+  </header>
+
+  <div class="card">
+    <label for="dob">Date of birth</label>
+    <input type="date" id="dob" />
+    <button onclick="calculate()">Calculate →</button>
+  </div>
+
+  <div class="results" id="results">
+
+    <div class="main-age">
+      <div class="label">Your age</div>
+      <div class="age-display">
+        <div class="age-unit">
+          <span class="num" id="y">0</span>
+          <span class="unit-label">Years</span>
+        </div>
+        <div class="sep">:</div>
+        <div class="age-unit">
+          <span class="num" id="m">0</span>
+          <span class="unit-label">Months</span>
+        </div>
+        <div class="sep">:</div>
+        <div class="age-unit">
+          <span class="num" id="d">0</span>
+          <span class="unit-label">Days</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="stat-card">
+        <div class="s-label">Total days</div>
+        <div class="s-val" id="tDays">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Total hours</div>
+        <div class="s-val" id="tHours">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Total minutes</div>
+        <div class="s-val" id="tMins">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Total seconds</div>
+        <div class="s-val" id="tSecs">0</div>
+      </div>
+    </div>
+
+    <div class="full-card">
+      <span class="f-label">Day of birth</span>
+      <span class="f-val" id="dobDay">—</span>
+    </div>
+
+    <div class="full-card">
+      <span class="f-label">Zodiac sign</span>
+      <span class="f-val" id="zodiac">—</span>
+    </div>
+
+    <div class="birthday-card" id="bdayCard">
+      <span class="f-label">Next birthday</span>
+      <span class="f-val" id="nextBday">—</span>
+    </div>
+
+  </div>
+
+  <footer>Built by Abdullah ALSaab · abdullahalsaab.vercel.app</footer>
+</div>
+
+<script>
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const ZODIAC = [
+  ['Capricorn',1,1],['Aquarius',1,20],['Pisces',2,19],['Aries',3,21],
+  ['Taurus',4,20],['Gemini',5,21],['Cancer',6,21],['Leo',7,23],
+  ['Virgo',8,23],['Libra',9,23],['Scorpio',10,23],['Sagittarius',11,22],['Capricorn',12,22]
+];
+
+function getZodiac(month, day) {
+  for (let i = ZODIAC.length - 1; i >= 0; i--) {
+    if (month === ZODIAC[i][1] && day >= ZODIAC[i][2]) return ZODIAC[i][0];
+    if (month > ZODIAC[i][1]) return ZODIAC[i][0];
+  }
+  return 'Capricorn';
+}
+
+function fmt(n) { return n.toLocaleString(); }
+
+function calculate() {
+  const dobVal = document.getElementById('dob').value;
+  if (!dobVal) { alert('Please select your date of birth!'); return; }
+
+  const dob = new Date(dobVal);
+  const now = new Date();
+  if (dob > now) { alert('Date of birth cannot be in the future!'); return; }
+
+  let years  = now.getFullYear() - dob.getFullYear();
+  let months = now.getMonth()    - dob.getMonth();
+  let days   = now.getDate()     - dob.getDate();
+
+  if (days < 0) {
+    months--;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) { years--; months += 12; }
+
+  const diffMs   = now - dob;
+  const tDays    = Math.floor(diffMs / 864e5);
+  const tHours   = Math.floor(diffMs / 36e5);
+  const tMins    = Math.floor(diffMs / 6e4);
+  const tSecs    = Math.floor(diffMs / 1e3);
+
+  const dobDay   = DAYS[dob.getDay()];
+  const zodiac   = getZodiac(dob.getMonth() + 1, dob.getDate());
+
+  const nextBday = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+  if (nextBday <= now) nextBday.setFullYear(now.getFullYear() + 1);
+  const daysLeft = Math.ceil((nextBday - now) / 864e5);
+  const nextStr  = daysLeft === 0 ? '🎉 Today!' : daysLeft + ' days left';
+
+  document.getElementById('y').textContent = years;
+  document.getElementById('m').textContent = months;
+  document.getElementById('d').textContent = days;
+  document.getElementById('tDays').textContent  = fmt(tDays);
+  document.getElementById('tHours').textContent = fmt(tHours);
+  document.getElementById('tMins').textContent  = fmt(tMins);
+  document.getElementById('tSecs').textContent  = fmt(tSecs);
+  document.getElementById('dobDay').textContent = dobDay;
+  document.getElementById('zodiac').textContent = zodiac;
+  document.getElementById('nextBday').textContent = nextStr;
+
+  const r = document.getElementById('results');
+  r.classList.add('show');
+  r.querySelectorAll('.stat-card, .main-age, .full-card, .birthday-card').forEach((el, i) => {
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = `pop 0.4s ease ${i * 0.05}s both`;
+  });
+}
+</script>
+
+</body>
+</html>
